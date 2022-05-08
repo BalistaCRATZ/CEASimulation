@@ -80,8 +80,8 @@ def get_chamber_pressure_and_OF(p_tank, ox_area):
     ox_manifold = Manifold(fluid=oxidiser, parent=ox_property_source, A=1)
     ox_orifice = Orifice(manifold=ox_manifold, A=ox_area, Cd=0.7)
     # END INIT #
-    chamber_pressure = scipy.optimize.fsolve(func=mass_flow_diff, x0=np.array(10e5), args=(19e5, ox_orifice))[0]
-    OF = mdot_fuel_calc(p_tank, chamber_pressure)/mdot_ox_calc(p_tank, chamber_pressure, ox_orifice)
+    chamber_pressure = scipy.optimize.fsolve(func=mass_flow_diff, x0=np.array(10e5), args=(p_tank, ox_orifice))[0]
+    OF = mdot_ox_calc(p_tank, chamber_pressure, ox_orifice)/mdot_fuel_calc(p_tank, chamber_pressure)
     return [chamber_pressure, OF]
 
 def main():

@@ -12,15 +12,16 @@ import matplotlib.pyplot as plt
 
 #Some variables
 initial_ullage_pressure = 19e5
-initial_chamber_pressure = 10e5
 initial_ullage_fraction = 0.05 # fraction of total volume replaced by ullage
-initial_propellant_mass = 150
+initial_propellant_mass = 15
 fuel_density = 841.9 #Density of IPA and H20 mixture at 15C, from ic.gc.ca and NIST
 oxidiser_density = 1001.2 #Density of N20 at -20C, from NIST
 initial_rho = ((fuel_density + 3.5 * oxidiser_density)/4.5)*(1-initial_ullage_fraction)
 tank_volume = initial_propellant_mass/initial_rho
-dt = 0.1
-t_max = 10
+print(tank_volume)
+dt = 0.01
+t_max = 0.8
+feed_pressure_drop = 3e5
 
 def get_density(ullage):
     return ((fuel_density + 3.5 * oxidiser_density)/4.5)*(1-ullage)
@@ -98,12 +99,17 @@ def main():
 
     p_tank_list = []
     p_chamber_list = []
+    OF_ratio_list = []
+    mdot_list = []
 
     for t in t_list:
         p_tank_list.append(p_tank)
-        p_chamber, OF = get_chamber_pressure_and_OF(p_tank, ox_area)
+        p_feed = p_tank - feed_pressure_drop
+        p_chamber, OF = get_chamber_pressure_and_OF(p_feed, ox_area)
+        OF_ratio_list.append(OF)
         p_chamber_list.append(p_chamber)
         mdot = mdot_nozzle_calc(p_chamber, OF)
+        mdot_list.append(mdot)
         prev_density = density
         density = get_density(ullage)
         Vdot = mdot/density
@@ -122,13 +128,25 @@ def main():
         print(f"Time : {t_list[i]}")
         print(f"Tank Pressure: {p_tank_list[i]}")
         print(f"Chamber Pressure: {p_chamber_list[i]}")
-    
+    print(OF)
+
     plt.xlabel("Time(s)")
     plt.ylabel("Pressure (Pa)")
     plt.plot (t_list, p_tank_list, label = "Tank Pressure (Pa)")
     plt.plot(t_list, p_chamber_list, label = "Chamber Pressure (Pa)")
+    # plt.plot(t_list, OF_ratio_list, label = "OF Ratio")
     plt.legend()
     plt.show()
+
+    # plt.xlabel("Time(s)")
+    # plt.ylabel("OF Ratio")
+    # plt.plot(t_list, OF_ratio_list)
+    # plt.show()
+
+    # plt.xlabel("Time(s)")
+    # plt.ylabel("mdot (kgs)")
+    # plt.plot(t_list, mdot_list)
+    # plt.show()
 
 
 if __name__ == "__main__":
