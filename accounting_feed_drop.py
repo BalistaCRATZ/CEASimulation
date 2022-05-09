@@ -9,9 +9,10 @@ from rocketcea.blends import newFuelBlend
 
 # Plotting libraries
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 #Some variables
-initial_ullage_pressure = 19e5
+initial_ullage_pressure = 29e5
 initial_ullage_fraction = 0.05 # fraction of total volume replaced by ullage
 initial_propellant_mass = 15
 fuel_density = 841.9 #Density of IPA and H20 mixture at 15C, from ic.gc.ca and NIST
@@ -130,12 +131,15 @@ def main():
         print(f"Chamber Pressure: {p_chamber_list[i]}")
     print(OF)
 
-    plt.xlabel("Time(s)")
-    plt.ylabel("Pressure (Pa)")
-    plt.plot (t_list, p_tank_list, label = "Tank Pressure (Pa)")
-    plt.plot(t_list, p_chamber_list, label = "Chamber Pressure (Pa)")
+    ax1.set_xlabel("Time(s)")
+    ax1.set_ylabel("Pressure (bar)")
+    ax1.plot (t_list, p_tank_list, label = "Tank Pressure (bar)")
+    ax1.plot(t_list, p_chamber_list, label = "Chamber Pressure (bar)")
+    scale_y = 1e5
+    ticks_y = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y/scale_y))
+    ax1.yaxis.set_major_formatter(ticks_y)
     # plt.plot(t_list, OF_ratio_list, label = "OF Ratio")
-    plt.legend()
+    ax1.legend()
     plt.show()
 
     # plt.xlabel("Time(s)")
