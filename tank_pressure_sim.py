@@ -129,6 +129,7 @@ def main():
     plt.plot(t_list, p_chamber_list, label = "Chamber Pressure (Pa)")
     plt.legend()
     plt.show()
+    plt.savefig("figs/tfig")
 
 
 if __name__ == "__main__":
