@@ -20,10 +20,12 @@ fuel_density = 841.9 #Density of IPA and H20 mixture at 15C, from ic.gc.ca and N
 oxidiser_density = 1001.2 #Density of N20 at -20C, from NIST
 initial_rho = ((fuel_density + 3.5 * oxidiser_density)/4.5)*(1-initial_ullage_fraction)
 tank_volume = initial_propellant_mass/initial_rho
-print(tank_volume)
+#print(tank_volume)
 dt = 0.01
 t_max = 0.8
 feed_pressure_drop = 3e5
+ambient_pressure = 1e5
+dry_mass = 10
 
 def get_density(ullage):
     return ((fuel_density + 3.5 * oxidiser_density)/4.5)*(1-ullage)
@@ -60,6 +62,8 @@ def main():
     p_chamber_list = []
     OF_ratio_list = []
     mdot_list = []
+    thrust_list = []
+    ISp_list = []
 
     for t in t_list:
         p_tank_list.append(p_tank)
@@ -75,6 +79,16 @@ def main():
         propellant_volume = (1-ullage)*tank_volume - Vdot*dt
         ullage = (tank_volume - propellant_volume)/tank_volume
 
+        thrust = get_thrust(p_chamber, OF, ambient_pressure)
+        thrust_list.append(thrust)
+
+        ISp = get_ISp(p_chamber, OF, ambient_pressure)
+        ISp_list.append(ISp)
+
+        propellant_mass = density * propellant_volume
+        weight = (propellant_mass + dry_mass)*9.81
+
+        print(thrust/weight) #printing the TWR ---> Seems high, weight might be too low?
 
         ## Modelling Isentropic expansion of gas to determine new tank_pressure
         (MOLECULAR_MASS, gamma) = C.get_Throat_MolWt_gamma(p_chamber, OF)
@@ -83,23 +97,30 @@ def main():
         R = 1000*R  # in J/kg-K
         p_tank = ((density/prev_density)**(gamma))*p_tank #Using isentropic formula
 
-    for i in range(len(t_list)):
-        print(f"Time : {t_list[i]}")
-        print(f"Tank Pressure: {p_tank_list[i]}")
-        print(f"Chamber Pressure: {p_chamber_list[i]}")
-    print(OF)
+    # for i in range(len(t_list)):
+    #     print(f"Time : {t_list[i]}")
+    #     print(f"Tank Pressure: {p_tank_list[i]}")
+    #     print(f"Chamber Pressure: {p_chamber_list[i]}")
+    # print(OF)
 
-    ax1.set_xlabel("Time(s)")
-    ax1.set_ylabel("Pressure (bar)")
-    ax1.plot (t_list, p_tank_list, label = "Tank Pressure (bar)")
-    ax1.plot(t_list, p_chamber_list, label = "Chamber Pressure (bar)")
-    scale_y = 1e5
-    ticks_y = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y/scale_y))
-    ax1.yaxis.set_major_formatter(ticks_y)
-    # plt.plot(t_list, OF_ratio_list, label = "OF Ratio")
-    ax1.legend()
-    plt.show()
-    plt.savefig("figs/tfig")
+
+    # fig1, ax1 = plt.subplots()
+    # ax1.set_xlabel("Time(s)")
+    # ax1.set_ylabel("Pressure (bar)")
+    # ax1.plot (t_list, p_tank_list, label = "Tank Pressure (bar)")
+    # ax1.plot(t_list, p_chamber_list, label = "Chamber Pressure (bar)")
+    # scale_y = 1e5
+    # ticks_y = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y/scale_y))
+    # ax1.yaxis.set_major_formatter(ticks_y)
+    # # plt.plot(t_list, OF_ratio_list, label = "OF Ratio")
+    # ax1.legend()
+    # plt.show()
+    # plt.savefig("fig.png")
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Thrust")
+    plt.plot(t_list, thrust_list)
+    plt.savefig("thrust.png")
 
     # plt.xlabel("Time(s)")
     # plt.ylabel("OF Ratio")
