@@ -7,6 +7,7 @@ from rocketcea.cea_obj_w_units import CEA_Obj
 from rocketcea.blends import newFuelBlend
 
 data = json.load(open("variables.json"))
+expansion_ratio = data["expansion_ratio"]
 
 Isoblend = newFuelBlend(fuelL = ["Isopropanol", "H2O"], fuelPcentL = [80, 20])
 C = CEA_Obj(oxName = "N2O", fuelName= Isoblend, pressure_units= 'Pa', specific_heat_units='kJ/kg-K', density_units = 'kg/m^3', temperature_units = 'K')
@@ -34,9 +35,9 @@ def mdot_ox_calc(p_tank, p_chamber, orifice: Orifice):
 
 
 def mdot_nozzle_calc(p_chamber, OF):
-    CHAMBER_TEMP = C.get_Temperatures(p_chamber, OF)[1]  # expansion ratio is set to default of 40
-    (MOLECULAR_MASS, gamma) = C.get_Throat_MolWt_gamma(p_chamber, OF)
-    cp = C.get_HeatCapacities(p_chamber, OF)[1]  # in kJ/kg-K
+    CHAMBER_TEMP = C.get_Temperatures(p_chamber, OF, eps = expansion_ratio)[1]  # expansion ratio is set to default of 40
+    (MOLECULAR_MASS, gamma) = C.get_Throat_MolWt_gamma(p_chamber, OF, eps = expansion_ratio)
+    cp = C.get_HeatCapacities(p_chamber, OF, eps = expansion_ratio)[1]  # in kJ/kg-K
     R = cp - (cp / gamma)
     R = 1000 * R
 
@@ -50,3 +51,16 @@ def mass_flow_diff(p_chamber, p_tank, orifice: Orifice):
     OF = m_o / m_f
     m_n = mdot_nozzle_calc(p_chamber, OF)
     return m_n - m_f - m_o
+
+
+def get_thrust(p_chamber, OF, p_ambient):
+
+    CF, CFamb, mode = C.get_PambCf(p_ambient, p_chamber, OF)
+ 
+    return data["throat_area"] * p_chamber * CFamb
+
+def get_ISp(p_chamber, OF, p_ambient):
+
+    ISpamb, mode = C.estimate_Ambient_Isp(p_chamber, OF, Pamb = p_ambient)
+
+    return ISpamb
